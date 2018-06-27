@@ -5,6 +5,9 @@ import java.util.Map;
 
 import org.jenkinsci.test.acceptance.junit.AbstractJUnitTest;
 import org.jenkinsci.test.acceptance.junit.WithPlugins;
+import org.jenkinsci.test.acceptance.plugins.AnalysePageObject;
+import org.jenkinsci.test.acceptance.plugins.PriorityPageObject;
+import org.jenkinsci.test.acceptance.plugins.TrendPageObject;
 import org.jenkinsci.test.acceptance.plugins.warnings.IssuesRecorder;
 import org.jenkinsci.test.acceptance.plugins.warnings.IssuesRecorder.StaticAnalysisTool;
 import org.jenkinsci.test.acceptance.plugins.warnings.WarningsResultDetailsPage;
@@ -15,6 +18,8 @@ import org.junit.Test;
 import org.openqa.selenium.WebElement;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.jenkinsci.test.acceptance.Matchers.*;
+import static org.jenkinsci.test.acceptance.Matchers.hasNewIssues;
 
 /**
  * Acceptance tests for the White Mountains release of the warnings plug-in.
@@ -65,7 +70,7 @@ public class AnalysisPluginsTest extends AbstractJUnitTest {
 
         job.addPublisher(IssuesRecorder.class, recorder -> {
             recorder.setTool("CheckStyle", "**/checkstyle.xml");
-            recorder.addTool("PMD", "**/pmd.xml");
+            recorder.addTool("PMD", "**/pmd.xml");      //TODO SetTool AddTool??warum beides
             recorder.setEnabledForAggregation(false);
         });
 
@@ -75,6 +80,53 @@ public class AnalysisPluginsTest extends AbstractJUnitTest {
 
         assertThat(build.getConsole()).contains("[CheckStyle] Created analysis result for 6 issues");
         assertThat(build.getConsole()).contains("[PMD] Created analysis result for 4 issues");
+    }
+
+
+    @Test
+    public void trendAndPriorityTest() {
+        FreeStyleJob job = createFreeStyleJob("aggregation/checkstyle.xml", "aggregation/pmd.xml");//"resources/pmd_plugin/pmd-warnings-build1.xml", "resources/pmd_plugin/pmd-warnings-build2.xml");
+
+        //First Build
+        job.addPublisher(IssuesRecorder.class, recorder -> {
+            recorder.setTool("PMD", "**/pmd-warnings-build1.xml");
+           // recorder.setEnabledForAggregation(false);   //TODO JaNein??
+        });
+
+        job.save();
+
+        Build build1 = job.startBuild().waitUntilFinished();
+
+        //SecondBuild
+        job.addPublisher(IssuesRecorder.class, recorder -> {
+            recorder.setTool("PMD", "**/pmd-warnings-build2.xml");
+            //recorder.setEnabledForAggregation(false);   //TODO JaNein??
+        });
+
+        job.save();
+
+        Build testBuild = job.startBuild().waitUntilFinished().shouldSucceed();
+
+        testBuild.open();
+       // AnalysePageObject analysePage = new AnalysePageObject();
+
+        //TrendPageObject trendPageObject = analysePage.getTrend();
+       // trendPageObject.getNewIssues();
+       // assertThat(trendPageObject, hasNewIssues(5));
+
+       // trendPageObject.getFixedIssues();
+       // trendPageObject.getOutstandingIssues();
+
+
+        //PriorityPageObject priorityPageObject = analysePage.getPriority();
+      //  priorityPageObject.getLowPriority();
+      //  priorityPageObject.getNormalPriority();
+     //   priorityPageObject.getHighPriority();
+
+        //testBuild.job;
+
+        //assertThat(build.getConsole()).contains("[CheckStyle] Created analysis result for 6 issues");
+        //assertThat(testBuild.getConsole()).contains("[PMD] Created analysis result for 4 issues");
     }
 
     /**

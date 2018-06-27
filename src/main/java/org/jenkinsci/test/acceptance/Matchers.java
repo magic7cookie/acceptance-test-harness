@@ -117,6 +117,31 @@ public class Matchers {
         };
     }
 
+    /**
+     * Matcher for TrendPageObject
+     * @param size
+     * @return
+     */
+    public static Matcher<PageObject> hasNewIssues(final int size) {
+        return new Matcher<PageObject>("has %s new Issues", size) {
+            @Override
+            public boolean matchesSafely(PageObject po) {
+                try {
+                    po.open();
+                    po.find(by.xpath("//div[@id='tasks']/div/a[text()='%s']", size));
+                    return true;
+                } catch (NoSuchElementException _) {
+                    return false;
+                }
+            }
+
+            @Override
+            public void describeMismatchSafely(PageObject po, Description d) {
+                d.appendValue(po.url).appendText(" does not have ").appendValue(size).appendText("new Issues");
+            }
+        };
+    }
+
     public static Matcher<String> containsRegexp(String regexp) {
         return containsRegexp(regexp, 0);
     }
